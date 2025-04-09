@@ -1,3 +1,4 @@
+# image_average.py
 import numpy as np
 import scipy.ndimage as sim
 import matplotlib.pyplot as plt
@@ -28,41 +29,38 @@ def process_image(input_file):
         input_file (str): 输入图像文件路径
         
     功能:
-        1. 读取输入图像（先检查文件是否存在）
+        1. 读取输入图像
         2. 创建3×3和15×15平均滤波器
         3. 对图像应用两种滤波器
         4. 显示原始图像和两种滤波结果对比
     """
-    # 读取图像（假设为灰度图）
+    # 1. 读取图像
     img = plt.imread(input_file)
     
-    #  创建滤波器
+    # 2. 创建滤波器
     small_filter = create_small_filter()
     large_filter = create_large_filter()
     
-    # 应用卷积
-    small_result = sim.convolve(img, small_filter, mode='constant')
-    large_result = sim.convolve(img, large_filter, mode='constant')
+    # 3. 应用卷积
+    small_result = sim.convolve(img, small_filter)
+    large_result = sim.convolve(img, large_filter)
     
-    # 显示结果
+    # 4. 显示结果
     plt.figure(figsize=(15, 5))
     
     # 原始图像
     plt.subplot(1, 3, 1)
     plt.imshow(img, cmap='gray')
-    plt.axis('off')
     plt.title('Original Image')
     
     # 3×3滤波结果
     plt.subplot(1, 3, 2)
     plt.imshow(small_result, cmap='gray')
-    plt.axis('off')
     plt.title('3×3 Filter Result')
     
     # 15×15滤波结果
     plt.subplot(1, 3, 3)
     plt.imshow(large_result, cmap='gray')
-    plt.axis('off')
     plt.title('15×15 Filter Result')
     
     plt.tight_layout()
@@ -70,4 +68,3 @@ def process_image(input_file):
 
 if __name__ == "__main__":
     process_image('bwCat.tif')
-
