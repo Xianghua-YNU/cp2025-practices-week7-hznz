@@ -1,67 +1,65 @@
-
+import os
 import numpy as np
 import scipy.ndimage as sim
+import matplotlib
+matplotlib.use('Agg')  
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 def load_stress_fibers():
-    """加载应力纤维数据"""
-    return np.loadtxt('stressFibers.txt') 
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(current_dir, './stressFibers.txt')
+    return np.loadtxt(data_path)
 
 def create_gauss_filter():
-    """创建各向异性高斯滤波器"""
     v = np.arange(-25, 26)
     X, Y = np.meshgrid(v, v)
-    return np.exp(-0.5*(X**2/5 + Y**2/45))  
+    return np.exp(-0.5*(X**2/5 + Y**2/45))
 
 def create_combined_filter(gauss_filter):
-    """创建组合滤波器"""
-    laplace_filter = np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
-    return sim.convolve(gauss_filter, laplace_filter)
+    laplace = np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
+    return sim.convolve(gauss_filter, laplace)
 
-def plot_filter_surface(filter, title):
-    """绘制滤波器3D表面图"""
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    X, Y = np.meshgrid(np.arange(filter.shape[1]), np.arange(filter.shape[0]))
-    ax.plot_surface(X, Y, filter, cmap='viridis')
-    plt.title(title)
-    plt.show()
-
-def process_and_display(image, filter, vmax_ratio=0.5):
-    """处理并显示图像"""
-    result = sim.convolve(image, filter)
-    plt.imshow(result, vmin=0, vmax=vmax_ratio*result.max())
+def process_and_display(image, kernel, scale=0.5):
+    result = sim.convolve(image, kernel)
+    plt.imshow(result, vmin=0, vmax=scale*result.max())
     plt.colorbar()
-    plt.show()
+    plt.savefig('processed_output.png') 
     return result
 
+
+def _plot_filter_3d(filter_matrix, title):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x, y = np.meshgrid(np.arange(filter_matrix.shape[1]), 
+                      np.arange(filter_matrix.shape[0]))
+    ax.plot_surface(x, y, filter_matrix, cmap='viridis')
+    plt.title(title)
+    plt.savefig(f'{title}.png')
+    plt.close()
+
+# --------------------------
+# 主程序流程
+# --------------------------
+
 if __name__ == "__main__":
-    # 主程序流程
-    stress_fibers = load_stress_fibers()
+    # 初始化数据
+    fibers = load_stress_fibers()
     
     # 显示原始数据
-    plt.imshow(stress_fibers, cmap='gray')
+    plt.imshow(fibers, cmap='gray')
     plt.title("Original Stress Fibers")
-    plt.show()
+    plt.savefig("original_image.png")
+    plt.close()
 
-    # 任务(a)
-    gauss = create_gauss_filter()
-    plt.imshow(gauss)
-    plt.title("Gaussian Filter")
-    plt.show()
-    plot_filter_surface(gauss, "Gaussian Filter Surface")
+    # 生成滤波器
+    gauss_kernel = create_gauss_filter()
+    combined_kernel = create_combined_filter(gauss_kernel)
+    
+    # 滤波器可视化
+    _plot_filter_3d(gauss_kernel, "Gaussian_Filter_3D")
+    _plot_filter_3d(combined_kernel, "Combined_Filter_3D")
 
-    # 任务(b)
-    combined = create_combined_filter(gauss)
-    plt.imshow(combined, origin='lower')
-    plt.title("Combined Filter")
-    plt.show()
-    plot_filter_surface(combined, "Combined Filter Surface")
-
-    # 任务(c)
-    process_and_display(stress_fibers, combined)
-
-    # 任务(d)
-    rotated_filter = sim.rotate(combined, 90)
-    process_and_display(stress_fibers, rotated_filter, 0.4)
+    # 执行特征强调
+    process_and_display(fibers, combined_kernel)  # 垂直方向
+    process_and_display(fibers, sim.rotate(combined_kernel, 90), 0.4)  # 水平方向
