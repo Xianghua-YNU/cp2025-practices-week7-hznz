@@ -3,125 +3,85 @@ import scipy.ndimage as sim
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-def load_stress_fibers():
-    """
-    加载应力纤维数据
-    
-    返回:
-        numpy.ndarray: 包含应力纤维数据的二维数组
-        
-    注意:
-        数据文件应位于data/stressFibers.txt
-        使用np.loadtxt加载文本格式的数据
-    """
-    # 学生需要实现：使用np.loadtxt加载数据文件
-    pass
+def load_data():
+    """加载应力纤维数据"""
+    return np.loadtxt('stressFibers.txt')
 
-def create_gauss_filter():
-    """
-    创建高斯滤波器
-    
-    返回:
-        numpy.ndarray: 51x51的高斯滤波器矩阵
-        
-    说明:
-        滤波器尺寸为51x51(-25到25)
-        X方向标准差σ_x=√5, Y方向标准差σ_y=√45
-        公式: exp(-0.5*(X²/5 + Y²/45))
-    """
-    # 学生需要实现：
-    # 1. 使用np.arange和np.meshgrid创建坐标网格
-    # 2. 根据公式计算高斯函数值
-    pass
+def generate_gauss_kernel():
+    """生成各向异性高斯滤波器，强调垂直方向特征"""
+    x = np.arange(-25, 26)  # 生成-25到25的坐标
+    X, Y = np.meshgrid(x, x)
+    sigma_x = np.sqrt(5)    # X方向标准差
+    sigma_y = np.sqrt(45)   # Y方向标准差（更大，强调垂直方向）
+    gauss = np.exp(-0.5 * (X**2/(sigma_x**2) + Y**2/(sigma_y**2)))
+    return gauss
 
-def create_combined_filter(gauss_filter):
-    """
-    创建高斯-拉普拉斯组合滤波器
-    
-    参数:
-        gauss_filter: 高斯滤波器矩阵
-        
-    返回:
-        numpy.ndarray: 组合后的滤波器矩阵
-        
-    说明:
-        使用3x3拉普拉斯滤波器与高斯滤波器卷积
-        拉普拉斯核: [[0,-1,0],[-1,4,-1],[0,-1,0]]
-    """
-    # 学生需要实现：
-    # 1. 定义3x3拉普拉斯滤波器
-    # 2. 使用scipy.ndimage.convolve进行卷积
-    pass
+def create_edge_filter():
+    """生成拉普拉斯边缘检测滤波器"""
+    return np.array([[0, -1, 0], 
+                    [-1, 4, -1], 
+                    [0, -1, 0]])
 
-def plot_filter_surface(filter, title):
-    """
-    绘制滤波器3D表面图
-    
-    参数:
-        filter: 要绘制的滤波器矩阵
-        title: 图形标题(使用英文) 
-        
-    说明:
-        使用mpl_toolkits.mplot3d绘制3D表面
-        图形尺寸设置为10x6英寸
-    """
-    # 学生需要实现：
-    # 1. 创建fig和3D axes
-    # 2. 使用plot_surface绘制表面
-    # 3. 设置标题并显示图形
-    pass
+def plot_3d_surface(kernel, title):
+    """绘制滤波器3D表面图"""
+    fig = plt.figure(figsize=(8,6))
+    ax = fig.add_subplot(111, projection='3d')
+    x, y = np.meshgrid(range(kernel.shape[1]), range(kernel.shape[0]))
+    ax.plot_surface(x, y, kernel, cmap='coolwarm')
+    ax.set_title(title)
+    plt.show()
 
-def process_and_display(stressFibers, filter, vmax_ratio=0.5):
-    """
-    处理图像并显示结果
-    
-    参数:
-        stressFibers: 输入图像数据
-        filter: 要应用的滤波器
-        vmax_ratio: 显示时的最大强度比例(默认0.5)
-        
-    返回:
-        numpy.ndarray: 处理后的图像数据
-    """
-    # 学生需要实现：
-    # 1. 使用scipy.ndimage.convolve应用滤波器
-    # 2. 使用plt.imshow显示结果，设置vmin=0, vmax=vmax_ratio*最大值
-    # 3. 添加colorbar并显示图形
-    pass
+def apply_filter(image, kernel, scale=0.5):
+    """应用滤波器并显示结果"""
+    filtered = sim.convolve(image, kernel)
+    plt.imshow(filtered, vmin=0, vmax=scale*filtered.max())
+    plt.colorbar()
+    plt.show()
+    return filtered
 
-def main():
-    """
-    主函数，执行完整的图像特征强调流程
-    
-    流程:
-    1. 加载应力纤维数据
-    2. 创建并可视化高斯滤波器
-    3. 创建并可视化组合滤波器
-    4. 应用不同方向的滤波器处理图像
-    5. 显示处理结果
-    """
-    # 加载数据
-    stressFibers = load_stress_fibers()
-    
-    # 任务(a): 创建并显示高斯滤波器
-    gauss_filter = create_gauss_filter()
-    # 学生需要添加:
-    # 1. 使用plt.imshow显示滤波器
-    # 2. 添加标题和colorbar
-    # 3. 调用plot_filter_surface绘制3D图
-    
-    # 任务(b): 创建组合滤波器并比较
-    combined_filter = create_combined_filter(gauss_filter)
-    # 学生需要添加显示代码
-    
-    # 任务(c): 应用垂直滤波器
-    # 学生需要添加处理代码
-    
-    # 任务(d): 应用水平滤波器
-    # 学生需要添加处理代码
-    
-    # 选做: 45度方向滤波器
-    # 学生需要添加处理代码
-
+# 主程序流程
 if __name__ == "__main__":
-    main()
+    # 加载原始数据
+    fiber_data = load_data()
+    plt.imshow(fiber_data, cmap='gray')
+    plt.title("原始应力纤维图像")
+    plt.show()
+
+    # 任务(a): 高斯滤波器
+    gauss_kernel = generate_gauss_kernel()
+    plt.imshow(gauss_kernel)
+    plt.title("高斯滤波器（垂直方向）")
+    plt.colorbar()
+    plt.show()
+    plot_3d_surface(gauss_kernel, "高斯滤波器3D表面图")
+
+    # 任务(b): 组合滤波器
+    laplace = create_edge_filter()
+    combined_kernel = sim.convolve(gauss_kernel, laplace)
+    plt.imshow(combined_kernel, origin='lower')
+    plt.title("组合滤波器（高斯+拉普拉斯）")
+    plt.colorbar()
+    plt.show()
+    plot_3d_surface(combined_kernel, "组合滤波器3D表面图")
+
+    # 任务(c): 垂直方向特征增强
+    print("垂直方向滤波结果:")
+    vertical_result = apply_filter(fiber_data, combined_kernel)
+
+    # 任务(d): 水平方向特征增强
+    rotated_kernel = sim.rotate(combined_kernel, 90)
+    print("水平方向滤波结果:")
+    horizontal_result = apply_filter(fiber_data, rotated_kernel, 0.4)
+
+    # 选做：45度方向
+    angles = [45, -45]
+    plt.figure(figsize=(10,4))
+    for i, angle in enumerate(angles, 1):
+        rotated_kernel = sim.rotate(combined_kernel, angle)
+        result = sim.convolve(fiber_data, rotated_kernel)
+        plt.subplot(1,2,i)
+        plt.imshow(result, vmin=0, vmax=0.5*result.max())
+        plt.title(f"{angle}度方向滤波")
+        plt.colorbar()
+    plt.tight_layout()
+    plt.show()
